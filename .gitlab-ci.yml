@@ -1,0 +1,23 @@
+stages:
+  - build_image
+
+variables:
+  PACKER_VERSION: "1.7.1"
+  VAULT_VERSION: "1.7.2"
+  TERRAFORM_VERSION: "0.15.4"
+  CONSUL_TEMPLATE_VERSION: "0.25.2"
+
+Build_Image:
+  stage: build_image
+  tags:
+    - infra
+  image: docker:19.03.15
+  variables:
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_HOST: tcp://localhost:2375/
+  services:
+    - docker:19.03.15-dind
+  script:
+    - docker login -u gitlab-ci-token -p ${CI_JOB_TOKEN} ${CI_REGISTRY}
+    - docker build --network host -t ${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG} --build-arg PACKER_VERSION --build-arg VAULT_VERSION --build-arg TERRAFORM_VERSION .
+    - docker push ${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}
